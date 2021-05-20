@@ -1,0 +1,51 @@
+---
+- name: Install LOKI Grafana
+  hosts: loki
+  vars:
+    - loki_url: https://github.com/grafana/loki/releases/download/v2.2.1/loki-linux-amd64.zip
+    - loki_version: loki-linux-amd64
+    - loki_service_config: files/loki/loki.service
+    - loki_file_config: loki-local-config.yaml
+    - loki_dir_config: /etc/loki
+    - loki_dir_data: /var/lib/loki
+  tasks:
+    - name: Create directory
+      file:
+        path: '{{ loki_dir_config }}'
+        state: directory
+
+    - name: Download Loki Grafana
+      unarchive:
+        src: '{{ loki_url }}'
+        dest: /tmp/
+        remote_src: yes
+
+    - name: Copy Loki binary
+      copy:
+        src: /tmp/{{ item }}
+        dest: /usr/local/sbin/
+        mode: 0755
+        remote_src: true
+      loop:
+        - '{{ loki_version }}'
+
+    - name: Copy Loki configuration file
+      template:
+        src: files/loki/{{ loki_file_config }}  
+        dest: '{{ loki_dir_config }}/{{ loki_file_config }}'
+
+    - name: Copy systemd configuration
+      template:
+        src: '{{ loki_service_config }}'
+        dest: /etc/systemd/system/
+
+    - name: Reload systemd daemon
+      systemd:
+        daemon_reload: yes
+    
+    - name: Start Service
+      service:
+        name: loki
+        state: started
+        enabled: yes 
+     

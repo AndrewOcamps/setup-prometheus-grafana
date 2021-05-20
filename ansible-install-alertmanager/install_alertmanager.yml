@@ -1,0 +1,91 @@
+---
+- name: Install AlertManager
+  hosts: alertmanager
+  vars:
+    - alert_url: https://github.com/prometheus/alertmanager/releases/download/v0.22.0-rc.1/alertmanager-0.22.0-rc.1.linux-amd64.tar.gz
+    - alert_version: alertmanager-0.22.0-rc.1.linux-amd64
+    - alert_service_config: files/alertmanager/alertmanager.service
+    - alert_file_config: alertmanager.yml
+    - alert_user: prometheus
+    - alert_dir_config: /etc/alertmanager
+    - alert_dir_data: /var/lib/alertmanager
+  tasks:
+    - name: Create {{ alert_user }} 
+      user:
+        name: '{{ alert_user }}'
+        create_home: no
+        shell: /sbin/nologin
+
+    - name: Configure directory
+      file:
+        path: '{{ item }}'
+        state: directory
+        owner: '{{ alert_user }}'
+        group: '{{ alert_user }}'
+      loop:
+        - '{{ alert_dir_config }}'
+        - '{{ alert_dir_data }}'
+
+    - name: Download Alert Manager
+      unarchive:
+        src: '{{ alert_url }}' 
+        dest: /opt/
+        remote_src: yes
+
+    - name: Configure binary
+      copy:
+        src: /opt/{{ alert_version }}/{{ item }}
+        dest: /usr/local/sbin/
+        owner: '{{ alert_user }}'
+        mode: 0775
+        remote_src: yes
+      loop:
+        - alertmanager
+        - amtool
+
+    - name: Copy configuration file
+      copy:
+        src: files/alertmanager/{{ alert_file_config }}
+        dest: '{{ alert_dir_config }}/'
+        owner: '{{ alert_user }}'
+        
+    - name: Copy systemd configuration
+      template:
+        src: '{{ alert_service_config }}'
+        dest: /etc/systemd/system/
+
+    - name: Reload systemd daemon
+      systemd:
+        daemon_reload: yes
+    
+    - name: Start Service
+      service:
+        name: alertmanager
+        state: started
+        enabled: yes 
+
+    - name: Add configuration rule in Prometheus config
+      lineinfile:
+        path: /etc/prometheus/prometheus.yml
+        insertafter: ^rule_files
+        line: "  - rules.yml"
+      notify: restart_prometheus
+    
+    - name: Add alertmanager configuration in Prometheus config
+      blockinfile:
+        path: /etc/prometheus/prometheus.yml
+        insertbefore: ^rule_files
+        block: |
+          alerting:
+            alertmanagers:
+              - static_configs:
+                - targets:
+                  - localhost:9093
+      notify: restart_prometheus
+
+  handlers:
+    - name: restart_prometheus
+      service:
+        name: prometheus
+        state: restarted
+                

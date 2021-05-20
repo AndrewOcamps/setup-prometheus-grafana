@@ -1,0 +1,95 @@
+---
+- name: Install Prometheus
+  hosts: prometheus
+  vars:
+    #- prom_url: 'https://github.com/prometheus/prometheus/releases/download/v2.26.0/prometheus-2.26.0.linux-amd64.tar.gz'
+    - prom_url: 'files/prom/prometheus-2.26.0.linux-amd64.tar.gz'
+    - prom_version: prometheus-2.26.0.linux-amd64
+    - prom_dir_data: /var/lib/prometheus
+    - prom_storage_retention_time: 30d
+    - prom_dir_config: /etc/prometheus
+    - prom_service_config: files/prom/prometheus.service
+    - prom_file_config: prometheus.yml
+    - prom_user: prometheus
+  tasks:
+    - name: Create {{ prom_user }} 
+      user:
+        name: '{{ prom_user }}'
+        create_home: no
+        shell: /sbin/nologin
+
+    - name: Configure directory
+      file:
+        path: '{{ item }}'
+        state: directory
+        owner: '{{ prom_user }}'
+        group: '{{ prom_user }}'
+      loop:
+        - '{{ prom_dir_data }}'
+        - '{{ prom_dir_config }}'
+
+    - name: Download Prometheus
+      unarchive:
+        src: '{{ prom_url }}'
+        dest: /tmp/
+        #remote_src: yes
+
+    - name: Copy Prometheus binary
+      copy:
+        src: /tmp/{{ prom_version }}/{{ item }}
+        dest: /usr/local/sbin/
+        owner: '{{ prom_user }}'
+        group: '{{ prom_user }}'
+        mode: 0755
+        remote_src: true
+      loop:
+        - prometheus
+        - promtool
+
+    - name: Copy Prometheus configuration dependencies
+      copy:
+        src: /tmp/{{ prom_version }}/{{ item }}
+        dest: '{{ prom_dir_config }}'
+        owner: '{{ prom_user }}'
+        group: '{{ prom_user }}'
+        remote_src: true
+      loop:
+        - consoles
+        - console_libraries
+
+    - name: Copy Prometheus configuration file
+      template:
+        src: files/prom/{{ prom_file_config }}
+        dest: '{{ prom_dir_config }}/{{ prom_file_config }}' 
+        owner: '{{ prom_user }}'
+        group: '{{ prom_user }}'
+
+    - name: Configure prometheus as a service systemd
+      template:
+        src: '{{ prom_service_config }}'
+        dest: /etc/systemd/system/
+      
+    - name: Reload systemd daemon
+      systemd:
+        daemon_reload: yes
+      notify: restart_prometheus
+
+    - name: Start service
+      service:
+        name: prometheus
+        state: started
+        enabled: yes
+
+  handlers:
+    - name: restart_prometheus
+      service: 
+        name: prometheus
+        state: restarted
+      
+
+
+
+     
+ 
+
+

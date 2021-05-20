@@ -1,0 +1,15 @@
+---
+- name: Create a simple Grafana Dashboard
+  hosts: grafana
+  vars:
+    - grafana_url: 'http://192.168.33.51:3000'
+    - grafana_key: 'eyJrIjoidmxlWjViSHNpZDcxYzZMSWdFc01ibTRISk9laXdPaTYiLCJuIjoiZGV2b3BzIiwiaWQiOjF9'
+  tasks:
+    - name: Dashboard for Node Exporter Linux
+      community.grafana.grafana_dashboard:
+        grafana_url: '{{ grafana_url }}'
+        grafana_api_key: '{{ grafana_key }}'
+        state: present
+        path: files/dashboards/Node-Exporter-Full.json
+      delegate_to: localhost
+        

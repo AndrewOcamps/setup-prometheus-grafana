@@ -1,0 +1,10 @@
+[grafana]
+prom01.labs.ocampoge.com ansible_host=192.168.33.51
+
+[prometheus]
+prom01.labs.ocampoge.com ansible_host=192.168.33.51
+
+
+[node_exporter]
+node01.labs.ocampoge.com ansible_host=192.168.33.61
+node02.labs.ocampoge.com ansible_host=192.168.33.62

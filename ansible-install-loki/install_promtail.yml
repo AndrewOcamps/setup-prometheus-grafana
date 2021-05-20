@@ -1,0 +1,46 @@
+---
+- name: Install PromTail
+  hosts: promtail
+  vars:
+    - ptail_url: https://github.com/grafana/loki/releases/download/v2.2.1/promtail-linux-amd64.zip
+    - ptail_version: promtail-linux-amd64
+    - ptail_file_config: promtail-local-config.yaml
+    - ptail_service_config: files/promtail/promtail.service
+    - loki_server: 192.168.33.51
+  tasks:
+    - name: create directory
+      file:
+        path: /opt/promtail
+        state: directory
+
+    - name: Download promtail
+      unarchive:
+        src: '{{ ptail_url }}'
+        dest: /opt/promtail/
+        remote_src: yes
+
+    - name: Configure link to binary 
+      file:
+        src: /opt/promtail/{{ ptail_version }}
+        dest: /opt/promtail/promtail
+        state: link
+
+    - name: Copy configuration file
+      template:
+        src: files/promtail/{{ ptail_file_config }}
+        dest: /opt/promtail/
+
+    - name: Copy systemd configuration
+      template:
+        src: '{{ ptail_service_config }}'
+        dest: /etc/systemd/system/
+
+    - name: Reload systemd daemon
+      systemd:
+        daemon_reload: yes
+
+    - name: Start service
+      service:
+        name: promtail
+        state: started
+        enabled: yes

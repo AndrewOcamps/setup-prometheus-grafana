@@ -1,0 +1,2 @@
+[grafana]
+prom01.labs.ocampoge.com ansible_host=192.168.33.51

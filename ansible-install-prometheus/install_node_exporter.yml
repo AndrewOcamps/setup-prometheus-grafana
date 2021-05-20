@@ -1,0 +1,38 @@
+---
+- name: Install Node Exporter
+  hosts: node_exporter
+  vars:
+    - node_url: https://github.com/prometheus/node_exporter/releases/download/v1.1.2/node_exporter-1.1.2.linux-amd64.tar.gz
+    - node_version: node_exporter-1.1.2.linux-amd64
+    - node_path: 
+    - node_service_config: files/node_exporter/node_exporter.service
+  tasks:
+    - name: Download node_exporter
+      unarchive:
+        src: '{{ node_url }}'
+        dest: /opt/
+        remote_src: yes
+
+    - name: Configure link to binary 
+      file:
+        src: /opt/{{ node_version }}/
+        dest: /opt/node_exporter
+        state: link
+
+    - name: Copy systemd configuration
+      copy:
+        src: '{{ node_service_config }}'
+        dest: /etc/systemd/system/
+
+    - name: Reload systemd daemon
+      systemd:
+        daemon_reload: yes
+
+    - name: Start service
+      service:
+        name: node_exporter
+        state: started
+        enabled: yes
+
+
+      

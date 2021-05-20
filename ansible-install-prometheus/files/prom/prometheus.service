@@ -1,0 +1,20 @@
+[Unit]
+  Description=Prometheus Monitoring
+  Wants=network-online.target
+  After=network-online.target
+
+[Service]
+  User={{ prom_user }}
+  Group={{ prom_user }}
+  Type=simple
+  ExecStart=/usr/local/sbin/prometheus \
+  --config.file {{ prom_dir_config }}/{{ prom_file_config }} \
+  --storage.tsdb.path {{ prom_dir_data }} \
+  --storage.tsdb.retention.time={{ prom_storage_retention_time }} \
+  --web.enable-lifecycle \
+  --web.console.templates={{ prom_dir_config }}/consoles \
+  --web.console.libraries={{ prom_dir_config }}/console_libraries
+  ExecReload=/bin/kill -HUP $MAINPID
+
+[Install]
+  WantedBy=multi-user.target

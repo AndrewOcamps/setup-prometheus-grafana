@@ -1,0 +1,28 @@
+---
+- name: Install Grafana
+  hosts: grafana
+  vars:
+    - grafana_gpg_key: https://packages.grafana.com/gpg.key
+    - grafana_url: 'https://dl.grafana.com/oss/release/grafana-7.5.2-1.x86_64.rpm'
+    - grafana_version: grafana-7.5.2-1.x86_64.rpm
+  tasks:
+    - name: Download Grafana
+      get_url:
+        url: '{{ grafana_url }}'
+        dest: /tmp
+
+    - name: Validate GPG signature for grafana
+      rpm_key:
+        state: present
+        key: '{{ grafana_gpg_key }}'
+
+    - name: Install Grafana
+      package:
+        name: /tmp/{{ grafana_version }}
+        state: present
+
+    - name: Start Service
+      service:
+        name: grafana-server
+        state: started
+        enabled: yes

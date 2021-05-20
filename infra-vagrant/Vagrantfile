@@ -1,0 +1,98 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+# Gerardo Ocampos 2021 PY
+
+# All Vagrant configuration is done below. The "2" in Vagrant.configure
+# configures the configuration version (we support older styles for
+# backwards compatibility). Please don't change it unless you know what
+# you're doing.
+Vagrant.configure("2") do |config|
+
+    config.vm.box = "generic/centos8"
+    #config.vm.box_version = "1809.01"
+    config.vm.box_check_update = false
+  
+    config.vm.define 'prom01' do |master|
+      master.vm.hostname = "prom01.labs.ocampoge.com"
+      master.vm.network "private_network", ip: "192.168.33.51"
+      master.vm.provider "virtualbox" do |vb|
+        vb.gui = false
+        vb.memory = "1024"
+      end
+      master.vm.provision "shell", inline: <<-SHELL
+        sed -i 's/PasswordAuthentication no/PasswordAuthentication yes/g' /etc/ssh/sshd_config
+        systemctl restart sshd
+        nmcli con mod 'System eth0' ipv4.dns '8.8.8.8'
+        nmcli con mod 'System eth1' ipv4.dns '8.8.8.8'
+        systemctl restart NetworkManager
+        systemctl stop firewalld
+        systemctl disable firewalld
+        yum install epel-release
+        yum update -y
+        shutdown -r now
+      SHELL
+    end
+  
+    config.vm.define 'prom02' do |master|
+      master.vm.hostname = "prom02.labs.ocampoge.com"
+      master.vm.network "private_network", ip: "192.168.33.52"
+      master.vm.provider "virtualbox" do |vb|
+        vb.gui = false
+        vb.memory = "1024"
+      end
+      master.vm.provision "shell", inline: <<-SHELL
+        sed -i 's/PasswordAuthentication no/PasswordAuthentication yes/g' /etc/ssh/sshd_config
+        systemctl restart sshd
+        nmcli con mod 'System eth0' ipv4.dns '8.8.8.8'
+        nmcli con mod 'System eth1' ipv4.dns '8.8.8.8'
+        systemctl restart NetworkManager
+        systemctl stop firewalld
+        systemctl disable firewalld
+        yum install epel-release
+        yum update -y
+        shutdown -r now
+      SHELL
+    end
+  
+    config.vm.define 'node01' do |master|
+      master.vm.hostname = "node01.labs.ocampoge.com"
+      master.vm.network "private_network", ip: "192.168.33.61"
+      master.vm.provider "virtualbox" do |vb|
+        vb.gui = false
+        vb.memory = "512"
+      end
+      master.vm.provision "shell", inline: <<-SHELL
+        sed -i 's/PasswordAuthentication no/PasswordAuthentication yes/g' /etc/ssh/sshd_config
+        systemctl restart sshd
+        nmcli con mod 'System eth0' ipv4.dns '8.8.8.8'
+        nmcli con mod 'System eth1' ipv4.dns '8.8.8.8'
+        systemctl restart NetworkManager
+        systemctl stop firewalld
+        systemctl disable firewalld
+        yum install epel-release
+        yum update -y
+        shutdown -r now
+      SHELL
+    end
+    config.vm.define 'node02' do |master|
+      master.vm.hostname = "node02.labs.ocampoge.com"
+      master.vm.network "private_network", ip: "192.168.33.62"
+      master.vm.provider "virtualbox" do |vb|
+        vb.gui = false
+        vb.memory = "512"
+      end
+      master.vm.provision "shell", inline: <<-SHELL
+        sed -i 's/PasswordAuthentication no/PasswordAuthentication yes/g' /etc/ssh/sshd_config
+        systemctl restart sshd
+        nmcli con mod 'System eth0' ipv4.dns '8.8.8.8'
+        nmcli con mod 'System eth1' ipv4.dns '8.8.8.8'
+        systemctl restart NetworkManager
+        systemctl stop firewalld
+        systemctl disable firewalld
+        yum install epel-release
+        yum update -y
+        shutdown -r now
+      SHELL
+    end
+  end

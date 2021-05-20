@@ -1,0 +1,13 @@
+[Unit]
+  Description=Grafana Loki Monitoring
+  Wants=network-online.target
+  After=network-online.target
+
+[Service]
+  Type=simple
+  ExecStart=/usr/local/sbin/loki-linux-amd64 \
+  -config.file={{loki_dir_config}}/{{loki_file_config}}
+  ExecReload=/bin/kill -HUP $MAINPID
+
+[Install]
+  WantedBy=multi-user.target

@@ -1,0 +1,16 @@
+[Unit]
+  Description=Prometheus Alert Manager Monitoring
+  Wants=network-online.target
+  After=network-online.target
+
+[Service]
+  User={{ alert_user }}
+  Group={{ alert_user }}
+  Type=simple
+  ExecStart=/usr/local/sbin/alertmanager \
+  --config.file {{ alert_dir_config }}/{{ alert_file_config }} \
+  --storage.path {{ alert_dir_data }}
+  ExecReload=/bin/kill -HUP $MAINPID
+
+[Install]
+  WantedBy=multi-user.target
